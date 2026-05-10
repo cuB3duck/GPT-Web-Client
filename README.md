@@ -98,6 +98,7 @@ The SQLite database is created automatically on startup.
 | `GET` | `/api/conversations` | List the current user's conversations |
 | `POST` | `/api/conversations` | Create a new chat |
 | `GET` | `/api/conversations/{id}` | Load one chat and its messages |
+| `DELETE` | `/api/conversations/{id}` | Delete one chat and its messages |
 | `POST` | `/api/chat` | Send a message to Ollama and store the reply |
 
 Protected endpoints require:

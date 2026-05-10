@@ -69,6 +69,32 @@ export default function ChatPage() {
     await refreshConversations();
   }
 
+  async function handleDeleteConversation(id) {
+    setError("");
+    try {
+      await api.deleteConversation(id);
+      const remainingConversations = conversations.filter((conversation) => conversation.id !== id);
+
+      setConversations(remainingConversations);
+      setMessagesByConversation((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+
+      if (activeConversationId === id) {
+        const nextConversation = remainingConversations[0];
+        if (nextConversation) {
+          await selectConversation(nextConversation.id);
+        } else {
+          setActiveConversationId(null);
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   async function handleSend(message) {
     setLoading(true);
     setError("");
@@ -120,6 +146,7 @@ export default function ChatPage() {
         user={user}
         onNewChat={handleNewChat}
         onSelectConversation={selectConversation}
+        onDeleteConversation={handleDeleteConversation}
         onLogout={handleLogout}
       />
       <main className="chat-main">

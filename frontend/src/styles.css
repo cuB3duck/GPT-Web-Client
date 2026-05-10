@@ -169,21 +169,49 @@ button {
   overflow-y: auto;
 }
 
-.conversation-list button {
+.conversation-row {
+  align-items: center;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.conversation-row:hover,
+.conversation-row.active {
+  background: #343541;
+}
+
+.conversation-row button {
   background: transparent;
   border: 0;
   border-radius: 8px;
   color: #ececf1;
-  overflow: hidden;
   padding: 0.75rem;
+}
+
+.conversation-title {
+  overflow: hidden;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.conversation-list button:hover,
-.conversation-list button.active {
-  background: #343541;
+.delete-chat-button {
+  color: #c5c5d2;
+  font-size: 0.78rem;
+  opacity: 0;
+}
+
+.conversation-row:hover .delete-chat-button,
+.conversation-row.active .delete-chat-button,
+.delete-chat-button:focus-visible {
+  opacity: 1;
+}
+
+.delete-chat-button:hover {
+  background: rgba(255, 84, 84, 0.14);
+  color: #ffb4b4;
 }
 
 .empty-state {
