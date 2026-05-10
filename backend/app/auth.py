@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta, timezone
+import hashlib
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from .config import get_settings
@@ -11,19 +12,26 @@ from .database import get_db
 from .models import User
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 settings = get_settings()
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(_password_digest(password), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str | None) -> bool:
     if not hashed_password:
         return False
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(_password_digest(plain_password), hashed_password.encode("utf-8"))
+    except ValueError:
+        return False
+
+
+def _password_digest(password: str) -> bytes:
+    # bcrypt accepts up to 72 bytes; pre-hashing avoids silent truncation and long-password errors.
+    return hashlib.sha256(password.encode("utf-8")).hexdigest().encode("utf-8")
 
 
 def create_access_token(subject: str) -> str:
