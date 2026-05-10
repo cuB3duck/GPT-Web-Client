@@ -6,7 +6,7 @@ A full-stack ChatGPT-style web client built with:
 - **Backend:** Python + FastAPI
 - **Database:** SQLite via SQLAlchemy
 - **Auth:** Email/password, Google OAuth, JWT bearer tokens
-- **AI:** OpenAI Chat Completions API
+- **AI:** Local Ollama chat model
 
 ## Project structure
 
@@ -64,11 +64,20 @@ Edit `backend/.env`:
 DATABASE_URL=sqlite:///./chatgpt_web.db
 JWT_SECRET_KEY=replace-with-a-long-random-secret
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
-OPENAI_API_KEY=sk-your-openai-key
-OPENAI_MODEL=gpt-4o-mini
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_CHAT_MODEL=llama3.2:latest
+OLLAMA_TIMEOUT_SECONDS=120
 GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
 CORS_ORIGINS=http://localhost:5173
 ```
+
+Make sure Ollama is running before you send chat messages:
+
+```bash
+ollama serve
+```
+
+This project defaults to `llama3.2:latest`, which matches the chat model you have installed. Your embedding models (`qllama/bge-small-en-v1.5`, `nomic-embed-text`, and `mxbai-embed-large`) are not required for basic chat.
 
 Start the API:
 
@@ -89,7 +98,7 @@ The SQLite database is created automatically on startup.
 | `GET` | `/api/conversations` | List the current user's conversations |
 | `POST` | `/api/conversations` | Create a new chat |
 | `GET` | `/api/conversations/{id}` | Load one chat and its messages |
-| `POST` | `/api/chat` | Send a message to OpenAI and store the reply |
+| `POST` | `/api/chat` | Send a message to Ollama and store the reply |
 
 Protected endpoints require:
 
@@ -132,17 +141,21 @@ Visit `http://localhost:5173`.
 
 The frontend receives a Google ID token and sends it to `/api/auth/google`; the backend verifies it with `google-auth`.
 
-## OpenAI notes
+## Ollama notes
 
-Set `OPENAI_API_KEY` in `backend/.env`. The backend calls:
+No OpenAI API key is required. The backend calls the local Ollama HTTP API:
 
 ```python
-client.chat.completions.create(
-    model=settings.OPENAI_MODEL,
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        *history,
-    ],
+httpx.post(
+    f"{settings.OLLAMA_BASE_URL}/api/chat",
+    json={
+        "model": settings.OLLAMA_CHAT_MODEL,
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            *history,
+        ],
+        "stream": False,
+    },
 )
 ```
 
@@ -154,11 +167,14 @@ Run both servers at the same time:
 
 ```bash
 # Terminal 1
+ollama serve
+
+# Terminal 2
 cd backend
 source .venv/bin/activate
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Terminal 2
+# Terminal 3
 cd frontend
 npm run dev
 ```
