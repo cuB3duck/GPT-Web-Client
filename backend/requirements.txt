@@ -4,6 +4,6 @@ sqlalchemy
 pydantic[email]
 python-jose[cryptography]
 bcrypt
-openai
+httpx
 google-auth
 python-dotenv

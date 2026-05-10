@@ -1,10 +1,10 @@
 from datetime import datetime
 
+import httpx
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
-from openai import OpenAI
 from sqlalchemy.orm import Session
 
 from .auth import create_access_token, get_current_user, hash_password, verify_password
@@ -46,13 +46,46 @@ def build_token_response(user: User) -> Token:
     return Token(access_token=create_access_token(str(user.id)), user=user)
 
 
-def get_openai_client() -> OpenAI:
-    if not settings.OPENAI_API_KEY:
+def get_ollama_chat_response(messages: list[dict[str, str]]) -> str:
+    try:
+        response = httpx.post(
+            f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/chat",
+            json={
+                "model": settings.OLLAMA_CHAT_MODEL,
+                "messages": messages,
+                "stream": False,
+            },
+            timeout=settings.OLLAMA_TIMEOUT_SECONDS,
+        )
+        response.raise_for_status()
+    except httpx.ConnectError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="OPENAI_API_KEY is not configured",
+            detail=(
+                "Could not connect to Ollama. Make sure Ollama is running and "
+                f"{settings.OLLAMA_CHAT_MODEL} is installed."
+            ),
+        ) from exc
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Ollama returned an error: {exc.response.text}",
+        ) from exc
+    except httpx.RequestError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Ollama request failed: {exc}",
+        ) from exc
+
+    data = response.json()
+    assistant_message = data.get("message", {})
+    assistant_text = assistant_message.get("content")
+    if not assistant_text:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Ollama returned an empty response",
         )
-    return OpenAI(api_key=settings.OPENAI_API_KEY)
+    return assistant_text
 
 
 def get_user_conversation(db: Session, user_id: int, conversation_id: int) -> Conversation:
@@ -203,15 +236,12 @@ def chat(
     ]
     history.append({"role": "user", "content": payload.message})
 
-    client = get_openai_client()
-    completion = client.chat.completions.create(
-        model=settings.OPENAI_MODEL,
-        messages=[
+    assistant_text = get_ollama_chat_response(
+        [
             {"role": "system", "content": "You are a helpful assistant."},
             *history,
         ],
     )
-    assistant_text = completion.choices[0].message.content or ""
 
     user_message = Message(
         conversation_id=conversation.id,
