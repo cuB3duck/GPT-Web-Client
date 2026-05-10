@@ -5,5 +5,5 @@ pydantic[email]
 python-jose[cryptography]
 bcrypt
 httpx
-google-auth
+google-auth[requests]
 python-dotenv
