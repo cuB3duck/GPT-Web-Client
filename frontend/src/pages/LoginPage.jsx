@@ -1,0 +1,62 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import AuthForm from "../components/AuthForm.jsx";
+import { api, setToken } from "../services/api.js";
+
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const [values, setValues] = useState({ email: "", password: "", name: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  function handleChange(event) {
+    setValues((current) => ({ ...current, [event.target.name]: event.target.value }));
+  }
+
+  async function finishAuth(authResponse) {
+    setToken(authResponse.access_token);
+    navigate("/");
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await finishAuth(await api.login({ email: values.email, password: values.password }));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleSuccess(idToken) {
+    if (!idToken) {
+      setError("Google sign-in failed");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await finishAuth(await api.googleLogin(idToken));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <AuthForm
+      mode="login"
+      values={values}
+      error={error}
+      loading={loading}
+      onChange={handleChange}
+      onSubmit={handleSubmit}
+      onGoogleSuccess={handleGoogleSuccess}
+    />
+  );
+}
