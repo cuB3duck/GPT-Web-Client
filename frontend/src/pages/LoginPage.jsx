@@ -10,10 +10,12 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Keep previous form values and updates current value.
   function handleChange(event) {
     setValues((current) => ({ ...current, [event.target.name]: event.target.value }));
   }
 
+  // Save access token and redirect user to home page.
   async function finishAuth(authResponse) {
     setToken(authResponse.access_token);
     navigate("/");
@@ -23,6 +25,7 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError("");
+    // Send sign up data to backend and wait for response.
     try {
       await finishAuth(await api.login({ email: values.email, password: values.password }));
     } catch (err) {
@@ -39,6 +42,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     setError("");
+    // Send sign up data to backend and wait for response.
     try {
       await finishAuth(await api.googleLogin(idToken));
     } catch (err) {

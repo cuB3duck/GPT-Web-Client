@@ -1,5 +1,6 @@
 export default function MessageList({ messages, loading }) {
   return (
+    // Page if there are no messages.
     <div className="messages">
       {messages.length === 0 && (
         <div className="welcome-panel">

@@ -10,10 +10,12 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Keep previous form values and updates current value.
   function handleChange(event) {
     setValues((current) => ({ ...current, [event.target.name]: event.target.value }));
   }
 
+  // Save access token and redirect user to home page.
   async function finishAuth(authResponse) {
     setToken(authResponse.access_token);
     navigate("/");
@@ -23,6 +25,7 @@ export default function SignupPage() {
     event.preventDefault();
     setLoading(true);
     setError("");
+    // Send sign up data to backend and wait for response.
     try {
       await finishAuth(
         await api.signup({
@@ -45,6 +48,7 @@ export default function SignupPage() {
     }
     setLoading(true);
     setError("");
+    // Send sign up data to backend and wait for response.
     try {
       await finishAuth(await api.googleLogin(idToken));
     } catch (err) {

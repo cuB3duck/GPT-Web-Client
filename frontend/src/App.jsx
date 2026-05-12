@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import SignupPage from "./pages/SignupPage.jsx";
 import { getToken } from "./services/api.js";
 
+// Checks if the user is logged in
 function ProtectedRoute({ children }) {
   return getToken() ? children : <Navigate to="/login" replace />;
 }

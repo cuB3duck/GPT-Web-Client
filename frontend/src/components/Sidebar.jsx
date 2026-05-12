@@ -7,6 +7,7 @@ export default function Sidebar({
   onDeleteConversation,
   onLogout,
 }) {
+  // Display sidebar for conversations and logging out.
   return (
     <aside className="sidebar">
       <button className="new-chat-button" onClick={onNewChat}>

@@ -1,6 +1,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { Link } from "react-router-dom";
 
+// Create a reuseable authentication form.
 export default function AuthForm({
   mode,
   values,
@@ -10,6 +11,7 @@ export default function AuthForm({
   onSubmit,
   onGoogleSuccess,
 }) {
+  // Check if in sign up mode.
   const isSignup = mode === "signup";
 
   return (

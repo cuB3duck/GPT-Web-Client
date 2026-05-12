@@ -1,5 +1,15 @@
 # GPT-Web-Client
 
+
+cd backend
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+cd frontend
+npm run dev
+
+http://localhost:5173
+
 A full-stack ChatGPT-style web client built with:
 
 - **Frontend:** React + Vite
