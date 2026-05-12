@@ -29,7 +29,10 @@ async function request(path, options = {}) {
   });
 
   const contentType = response.headers.get("content-type") || "";
-  const data = contentType.includes("application/json") ? await response.json() : null;
+  const hasBody = response.status !== 204 && response.status !== 205;
+  const responseText = hasBody ? await response.text() : "";
+  const data =
+    responseText && contentType.includes("application/json") ? JSON.parse(responseText) : null;
 
   if (!response.ok) {
     throw new Error(data?.detail || "Request failed");
