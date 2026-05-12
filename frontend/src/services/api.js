@@ -62,6 +62,10 @@ export const api = {
       body: JSON.stringify({ title: "New chat" }),
     }),
   getConversation: (id) => request(`/conversations/${id}`),
+  deleteConversation: (id) =>
+    request(`/conversations/${id}`, {
+      method: "DELETE",
+    }),
   sendMessage: (message, conversationId) =>
     request("/chat", {
       method: "POST",

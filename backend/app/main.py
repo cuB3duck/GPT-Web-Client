@@ -216,6 +216,17 @@ def get_conversation(
     return get_user_conversation(db, current_user.id, conversation_id)
 
 
+@app.delete("/api/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_conversation(
+    conversation_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    conversation = get_user_conversation(db, current_user.id, conversation_id)
+    db.delete(conversation)
+    db.commit()
+
+
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(
     payload: ChatRequest,

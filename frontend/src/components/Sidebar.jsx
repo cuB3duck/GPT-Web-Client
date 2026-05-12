@@ -4,6 +4,7 @@ export default function Sidebar({
   user,
   onNewChat,
   onSelectConversation,
+  onDeleteConversation,
   onLogout,
 }) {
   return (
@@ -17,14 +18,28 @@ export default function Sidebar({
           <p className="empty-state">Your conversations will appear here.</p>
         )}
         {conversations.map((conversation) => (
-          <button
+          <div
             key={conversation.id}
-            className={conversation.id === activeConversationId ? "active" : ""}
-            onClick={() => onSelectConversation(conversation.id)}
-            title={conversation.title}
+            className={`conversation-row ${
+              conversation.id === activeConversationId ? "active" : ""
+            }`}
           >
-            {conversation.title}
-          </button>
+            <button
+              className="conversation-title"
+              onClick={() => onSelectConversation(conversation.id)}
+              title={conversation.title}
+            >
+              {conversation.title}
+            </button>
+            <button
+              className="delete-chat-button"
+              onClick={() => onDeleteConversation(conversation.id)}
+              aria-label={`Delete ${conversation.title}`}
+              title="Delete chat"
+            >
+              Delete
+            </button>
+          </div>
         ))}
       </nav>
 
