@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import ChatInput from "../components/ChatInput.jsx";
@@ -13,7 +13,9 @@ export default function ChatPage() {
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [messagesByConversation, setMessagesByConversation] = useState({});
   const [loading, setLoading] = useState(false);
+  const [deletingConversationId, setDeletingConversationId] = useState(null);
   const [error, setError] = useState("");
+  const deleteInFlightRef = useRef(false);
 
   const messages = useMemo(
     () => messagesByConversation[activeConversationId] || [],
@@ -70,17 +72,22 @@ export default function ChatPage() {
   }
 
   async function handleDeleteConversation(id) {
+    if (deleteInFlightRef.current) {
+      return;
+    }
+
     setError("");
+    deleteInFlightRef.current = true;
+    setDeletingConversationId(id);
     try {
       await api.deleteConversation(id);
-      const remainingConversations = conversations.filter((conversation) => conversation.id !== id);
-
-      setConversations(remainingConversations);
       setMessagesByConversation((current) => {
         const next = { ...current };
         delete next[id];
         return next;
       });
+
+      const remainingConversations = await refreshConversations();
 
       if (activeConversationId === id) {
         const nextConversation = remainingConversations[0];
@@ -92,6 +99,9 @@ export default function ChatPage() {
       }
     } catch (err) {
       setError(err.message);
+    } finally {
+      deleteInFlightRef.current = false;
+      setDeletingConversationId(null);
     }
   }
 
@@ -143,6 +153,7 @@ export default function ChatPage() {
       <Sidebar
         conversations={conversations}
         activeConversationId={activeConversationId}
+        deletingConversationId={deletingConversationId}
         user={user}
         onNewChat={handleNewChat}
         onSelectConversation={selectConversation}
